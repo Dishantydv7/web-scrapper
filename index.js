@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
 const qs_1 = __importDefault(require("qs"));
+const cheerio_1 = __importDefault(require("cheerio"));
 function solve(applicationNumber, day, month, year) {
     return __awaiter(this, void 0, void 0, function* () {
         let data = qs_1.default.stringify({
@@ -45,7 +46,8 @@ function solve(applicationNumber, day, month, year) {
             data: data
         };
         const response = yield axios_1.default.request(config);
-        console.log(response.data);
+        const parseData = parseHtml(JSON.stringify(response.data));
+        return parseData;
         // .then((response) => {
         //     console.log(JSON.stringify(response.data));
         // })
@@ -54,4 +56,42 @@ function solve(applicationNumber, day, month, year) {
         // });
     });
 }
-solve("240411183516", "08", "03", "2007");
+function parseHtml(htmlContent) {
+    const $ = cheerio_1.default.load(htmlContent);
+    const applicationNumber = $('td:contains("Application No.")').next('td').text().trim() || 'N/A';
+    const candidateName = $('td:contains("Candidate’s Name")').next('td').text().trim() || 'N/A';
+    const allIndiaRank = $('td:contains("NEET All India Rank")').next('td').text().trim() || 'N/A';
+    const marks = $('td:contains("Total Marks Obtained (out of 720)")').first().next('td').text().trim() || 'N/A';
+    // console.log({
+    //     applicationNumber,
+    //     candidateName,
+    //     allIndiaRank,
+    //     marks
+    // });
+    if (allIndiaRank === 'N/A') {
+        return null;
+    }
+    return {
+        applicationNumber,
+        candidateName,
+        allIndiaRank,
+        marks
+    };
+}
+function main(rollNumber) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let year = 2007; year > 2002; year--) {
+            for (let month = 3; month <= 12; month++) {
+                for (let day = 1; day <= 31; day++) {
+                    console.log(`Processing ${rollNumber} for ${day}-${month}-${year}`);
+                    const data = yield solve(rollNumber, day.toString(), month.toString(), year.toString());
+                    if (data) {
+                        console.log(data);
+                        process.exit(1);
+                    }
+                }
+            }
+        }
+    });
+}
+main("240411183516");

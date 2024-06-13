@@ -1,5 +1,7 @@
 import axios from 'axios'
 import qs from 'qs'
+import cheerio from 'cheerio'
+import { data } from 'cheerio/lib/api/attributes';
 
 async function solve(applicationNumber: string, day: string, month: string, year: string) {
     let data = qs.stringify({
@@ -32,18 +34,69 @@ async function solve(applicationNumber: string, day: string, month: string, year
         data: data
     };
 
-   const response = await axios.request(config)
-        console.log(response.data);
-        
 
-        // .then((response) => {
-        //     console.log(JSON.stringify(response.data));
-        // })
-        // .catch((error) => {
-        //     console.log(error);
-        // });
+    const response = await axios.request(config)
+    const parseData = parseHtml(JSON.stringify(response.data))
+
+
+    return parseData;
+
+
+
+    // .then((response) => {
+    //     console.log(JSON.stringify(response.data));
+    // })
+    // .catch((error) => {
+    //     console.log(error);
+    // });
 
 }
 
-solve("240411183516" , "08" , "03" , "2007");
+function parseHtml(htmlContent: string) {
+    const $ = cheerio.load(htmlContent);
+
+    const applicationNumber = $('td:contains("Application No.")').next('td').text().trim() || 'N/A';
+    const candidateName = $('td:contains("Candidate’s Name")').next('td').text().trim() || 'N/A';
+    const allIndiaRank = $('td:contains("NEET All India Rank")').next('td').text().trim() || 'N/A';
+
+    const marks = $('td:contains("Total Marks Obtained (out of 720)")').first().next('td').text().trim() || 'N/A';
+
+    // console.log({
+    //     applicationNumber,
+    //     candidateName,
+    //     allIndiaRank,
+    //     marks
+    // });
+
+    if (allIndiaRank === 'N/A') {
+        return null;
+    }
+
+    return {
+        applicationNumber,
+        candidateName,
+        allIndiaRank,
+        marks
+
+    }
+
+}
+
+async function main(rollNumber: string) {
+    for (let year = 2007; year > 2002; year--) {
+        for (let month = 3; month <= 12; month++) {
+            for (let day = 1; day <= 31; day++) {
+                console.log(`Processing ${rollNumber} for ${day}-${month}-${year}`);
+                
+                const data = await solve(rollNumber, day.toString(), month.toString(), year.toString());
+                if (data) {
+                    console.log(data);
+                    process.exit(1);
+                }
+            }
+        }
+    }
+}
+
+main("240411183516");
 
