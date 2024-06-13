@@ -81,15 +81,22 @@ function parseHtml(htmlContent) {
 function main(rollNumber) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let year = 2007; year > 2002; year--) {
-            for (let month = 3; month <= 12; month++) {
+            for (let month = 1; month <= 12; month++) {
+                const dataPromises = [];
+                console.log("Sending requests for month" + month + "of the year" + year);
                 for (let day = 1; day <= 31; day++) {
-                    console.log(`Processing ${rollNumber} for ${day}-${month}-${year}`);
-                    const data = yield solve(rollNumber, day.toString(), month.toString(), year.toString());
+                    //console.log(`Processing ${rollNumber} for ${day}-${month}-${year}`);
+                    const dataPromise = solve(rollNumber, day.toString(), month.toString(), year.toString());
+                    dataPromises.push(dataPromise);
+                }
+                // wait for all 31 req
+                const resolvedData = yield Promise.all(dataPromises);
+                resolvedData.forEach((data) => {
                     if (data) {
                         console.log(data);
                         process.exit(1);
                     }
-                }
+                });
             }
         }
     });
