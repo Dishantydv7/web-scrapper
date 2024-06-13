@@ -45,9 +45,14 @@ function solve(applicationNumber, day, month, year) {
             },
             data: data
         };
-        const response = yield axios_1.default.request(config);
-        const parseData = parseHtml(JSON.stringify(response.data));
-        return parseData;
+        try {
+            const response = yield axios_1.default.request(config);
+            const parseData = parseHtml(JSON.stringify(response.data));
+            return parseData;
+        }
+        catch (error) {
+            console.log(error);
+        }
         // .then((response) => {
         //     console.log(JSON.stringify(response.data));
         // })
@@ -80,10 +85,17 @@ function parseHtml(htmlContent) {
 }
 function main(rollNumber) {
     return __awaiter(this, void 0, void 0, function* () {
+        let solved = false;
         for (let year = 2007; year > 2002; year--) {
+            if (solved) {
+                break;
+            }
             for (let month = 1; month <= 12; month++) {
+                if (solved) {
+                    break;
+                }
                 const dataPromises = [];
-                console.log("Sending requests for month" + month + "of the year" + year);
+                console.log("Sending requests for month " + month + "of the year " + year);
                 for (let day = 1; day <= 31; day++) {
                     //console.log(`Processing ${rollNumber} for ${day}-${month}-${year}`);
                     const dataPromise = solve(rollNumber, day.toString(), month.toString(), year.toString());
@@ -94,11 +106,18 @@ function main(rollNumber) {
                 resolvedData.forEach((data) => {
                     if (data) {
                         console.log(data);
-                        process.exit(1);
+                        solved = true;
                     }
                 });
             }
         }
     });
 }
-main("240411183516");
+function gettingResult() {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let roll = 240411345673; roll < 240411999999; roll++) {
+            yield main(roll.toString());
+        }
+    });
+}
+gettingResult();

